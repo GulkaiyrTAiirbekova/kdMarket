@@ -1,22 +1,26 @@
-"""
-URL configuration for kdmMarket project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
+from rest_framework import routers
+
+from goods_app.urls import router as goods_router
+from carts_app.urls import router as carts_router
+from orders_app.urls import router as orders_router
+from payment_app.urls import router as payment_router
+from user_app.urls import router as user_router
+
+
+router = routers.DefaultRouter()
+
+router.registry.extend(goods_router.registry)
+router.registry.extend(carts_router.registry)
+router.registry.extend(orders_router.registry)
+router.registry.extend(payment_router.registry)
+router.registry.extend(user_router.registry)
+
+
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("api/", include(router.urls))
 ]
