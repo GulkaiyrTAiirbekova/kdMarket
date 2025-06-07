@@ -8,4 +8,4 @@ router.register(r'order', OrderView, basename='order')
 router.register(r'orderItem', OrderItemView, basename='orderItem')
 
 
-urlpatterns = router
+urlpatterns = router.urls

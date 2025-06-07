@@ -8,4 +8,4 @@ router.register(r'payment', PaymentView, basename='payment')
 router.register(r'paymentItem', PaymentItemView, basename='paymentItem')
 
 
-urlpatterns = router
+urlpatterns = router.urls

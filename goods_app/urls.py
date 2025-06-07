@@ -11,6 +11,6 @@ router.register(r'attribute',AttributeView,basename='attribute')
 router.register(r'productAttribute',ProductAttributeView,basename='productAttribute')
 
 
-urlpatterns = router
+urlpatterns = router.urls
 
 

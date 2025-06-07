@@ -11,13 +11,13 @@ User = get_user_model()
 class Category(models.Model):
     slug = models.SlugField(max_length = 25, verbose_name = "url")
     name = models.CharField(max_length= 25, verbose_name = "Название")
-    image = models.ImageField(upload_to = "Category_images/", verbose_name ="Изображение категории")
+    image = models.ImageField(upload_to = "Category_images/", null=True, blank=True, verbose_name ="Изображение категории")
 
 
 class Brand(models.Model):
     slug = models.SlugField(max_length = 25, verbose_name = "url")
     name = models.CharField(max_length= 25, verbose_name = "Название")
-    logo = models.ImageField(upload_to = "Brand_logo/", verbose_name ="Лого Бренда")
+    logo = models.ImageField(upload_to = "Brand_logo/", null=True, blank=True, verbose_name ="Лого Бренда")
     description = models.TextField(verbose_name= "Описание")
 
 class Product (models.Model):

@@ -1,12 +1,12 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
 
+from rest_framework import routers
 from . import views
 
 
-router =DefaultRouter()
-router.register(r'sign', views.UserView, basename='sign')
-router.register(r'verify', views.SMSVerificationView, basename='verify')
+router = routers.DefaultRouter()
+
+router.register(r'user-sign', views.UserApiView, basename='user_sign')
+router.register(r'user-verify', views.SMSVerificationApiView, basename='user_verify')
 
 
-urlpatterns = router
+urlpatterns = router.urls
