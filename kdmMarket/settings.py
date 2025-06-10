@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'carts_app',
     'payment_app',
     'user_app',
-
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
 
 ]
 
@@ -118,6 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -154,6 +156,9 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
 }
 
 # smtp-YANDEX+EMAIL connection
@@ -199,3 +204,13 @@ CACHES = {
 # Development-only settings
 CELERY_TASK_ALWAYS_EAGER = True  # True для локального тестирования
 CELERY_TASK_EAGER_PROPAGATES = True
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Your Project API',
+    'DESCRIPTION': 'Your project description',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
+}

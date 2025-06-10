@@ -13,3 +13,4 @@ class PaymentSerializer(serializers.ModelSerializer):
 class PaymentItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentItem
+        fields = '__all__'
