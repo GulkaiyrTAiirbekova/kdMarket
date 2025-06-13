@@ -4,6 +4,7 @@ from importlib.metadata import requires
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.template.context_processors import request
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.utils.representation import serializer_repr
@@ -21,10 +22,11 @@ from .tasks import generate_and_save_and_send_code
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample
 
 
+
 @extend_schema_view(
         list = extend_schema(
-            summary = "Возврашает Списка пользователей",
-            description = "Вощвращает список  всех пользователей с возможностью фильтраций по ID пользователя, по email и по username",
+            summary = "Возвращает список пользователей",
+            description = "Возвращает список  всех пользователей с возможностью фильтраций по ID пользователя, по email и по username",
             parameters=[
                 OpenApiParameter(name='id', description= "Фильтр по ID пользователя", required=False,type =int),
                 OpenApiParameter(name='email', description= "Фильтр по email пользователя", required=False,type =str),
@@ -37,7 +39,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiPara
                     {'error:' 'Некорректные данные'}
                 ),
                 404 : OpenApiExample(
-                    'Пользовательне найден',
+                    'Пользователь не найден',
                     {'error:' 'Некорректные данные'}
                 ),
             },
@@ -140,94 +142,120 @@ class UserApiView(viewsets.ModelViewSet):
 
         return Response({'message': 'Код отправлен.'}, status=status.HTTP_201_CREATED)
 #Документация (SWAGGER -DRF-SPECTECULAR) API->SMSVerificationApiView
+@from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample, OpenApiResponse
+
 @extend_schema_view(
-    list = extend_schema(
-        summary = 'Получение списка Верификаций и создание Профиля',
-        description='Возврашает список всех верификаций и созданий пользователя с возможностью фильтраций по ID Верификаций, по email  и по номеру телефона'
-        parameters =[
-            OpenApiParameter(name = 'id',description = 'Фильтр по ID Верификации',required =False,type = int),
-            OpenApiParameter(name = 'email',description = 'Фильтр по email верификации',required =False,type = str),
-            OpenApiParameter(name = 'code',description = 'Фильтр по коду верификации',required =False,type = str),
+    list=extend_schema(
+        summary='Получение списка Верификаций и создание Профиля',
+        description='Возвращает список всех верификаций и созданий пользователя с возможностью фильтрации по ID, email и номеру телефона',
+        parameters=[
+            OpenApiParameter(name='id', description='Фильтр по ID Верификации', required=False, type=int),
+            OpenApiParameter(name='email', description='Фильтр по email верификации', required=False, type=str),
+            OpenApiParameter(name='code', description='Фильтр по коду верификации', required=False, type=str),
         ],
-        responses = {
-            200: SMSVerificationSerializer,
-            400:OpenApiExample(
-                'Ошибка запроса',
-                {'error':'Некорректные данные'}
-            ),
-            404: OpenApiExample(
-                'Варификация Пользователя не найдена',
-                {'error':' Некорректные данные'}
-            ),
-        },
-    ),
-    retrive = extend_schema(
-        summary='Получение деталей Верификаций Профиля',
-        description='Возврашает данные корректных верификаций  пользователя. Результаты кэшируются для повышения производительности',
-        responses = {
-            200: SMSVerificationSerializer,
-            400:OpenApiExample(
-                'Варификация Пользователя не найдена',
-                {'error':'Варификация Пользователя  с данными ID не найдена'}
-            ),
-        },
-    ),
-    create = extend_schema(
-        summary='Создание Верификаций Профиля',
-        description='Создает новую верификацию  пользователя по ID',
-        request= SMSVerificationSerializer,
         responses={
             200: SMSVerificationSerializer,
-            400: OpenApiExample(
-                'Ошибка валидации',
-                {'error': 'Некорректные данные'},
+            400: OpenApiResponse(description='Ошибка запроса', examples=[
+                OpenApiExample(
+                    'Ошибка запроса',
+                    value={'error': 'Некорректные данные'}
+                )
+            ]),
+            404: OpenApiResponse(description='Верификация не найдена', examples=[
+                OpenApiExample(
+                    'Верификация не найдена',
+                    value={'error': 'Некорректные данные'}
+                )
+            ])
+        }
+    ),
+    retrieve=extend_schema(
+        summary='Получение деталей Верификаций Профиля',
+        description='Возвращает данные корректных верификаций пользователя. Результаты кэшируются.',
+        responses={
+            200: SMSVerificationSerializer,
+            400: OpenApiResponse(description='Ошибка', examples=[
+                OpenApiExample(
+                    'Ошибка',
+                    value={'error': 'Верификация Пользователя с данным ID не найдена'}
+                )
+            ])
+        }
+    ),
+    create=extend_schema(
+        summary='Создание Верификации Профиля',
+        description='Создает новую верификацию пользователя. В случае ошибки возвращает сообщение об ошибке',
+        responses={
+            200: SMSVerificationSerializer,
+            400: OpenApiResponse(description='Ошибка', examples=[
+                OpenApiExample(
+                    'Ошибка валидации',
+                    value={'error': 'Некорректные данные'}
+                )
+            ])
+        }
+    ),
+    update=extend_schema(
+        summary='Обновление Верификации пользователя',
+        description='Обновляет данные верификации пользователя по его ID.',
+        request=SMSVerificationSerializer,
+        responses={
+            200: SMSVerificationSerializer,
+            400: OpenApiResponse(description='Ошибка', examples=[
+                OpenApiExample(
+                    'Ошибка валидации',
+                    value={'error': 'Верификация пользователя с данными ID не найдена'}
+                )
+            ])
+        }
+    ),
+    partial_update=extend_schema(
+        summary='Частичное обновление Верификации пользователя',
+        description='Частично обновляет данные верификации пользователя по его ID.',
+        request=SMSVerificationSerializer,
+        responses={
+            200: SMSVerificationSerializer,
+            400: OpenApiResponse(description='Ошибка', examples=[
+                OpenApiExample(
+                    'Ошибка валидации',
+                    value={'error': 'Некорректные данные'}
+                )
+            ]),
+            404: OpenApiResponse(description='Не найдено', examples=[
+                OpenApiExample(
+                    'Верификация не найдена',
+                    value={'error': 'Верификация пользователя с данным ID не найдена'}
+                )
+            ])
+        }
+    )
+)
+
+    destroy = extend_schema(
+        summary='Удаление Верификаций пользователя',
+        description='Удаляет Верификацию польщователя по его ID',
+        responses={
+            204:OpenApiExample(
+                'Успешное Удаление',
+                {'message':'Верификация пользователя успешно удалена'},
             ),
             404:OpenApiExample(
-                'Варификация Пользователя не найдена',
-                {'error':'Варификация Пользователя  с данными ID не найдена'}
-            ),
-        },
-    ),
-    update= extend_schema(
-        summary='Обновление Верификаций пользователя',
-        description='Обнавляет данные  верификаций  пользователя. Результаты кэшируются для повышения производительности',
-    ####0:12 need to check create
+                'Верификация пользователя не найдена',
+                {'error':'Верификация пользователя, которую Вы хотите удалить с данными ID не найдена'}
+            )
+        }
     )
-class UserProfileApiView(viewsets.ModelViewSet):
-    """
-    Профиль пользователя (только для аутентифийированных пользователей)
-    """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-    filterset_fields =['id','email','username']
-
-    def retrieve(self, request, *args, **kwargs):
-        """ Получение данных профиля"""
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
-    def update(self, request, *args, **kwargs):
-        """Обновление данных профиля"""
-        serializer = UserSerializer(request.user,data=request.data,partial=False)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data,status.HTTP_200_OK)
-
-    def patch(self,request):
-        """ Частичное обновление данных"""
-        serializer =UserSerializer(request.user)
-
-
-
-
-
-
 
 
 class SMSVerificationApiView(viewsets.ModelViewSet):
+    """
+    Верификация SMS-кода и создание пользователя
+    """
     queryset = SMSVerification.objects.all()
     serializer_class = SMSVerificationSerializer
+    filterset_fields = ['id', 'email', 'code']
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = SMSVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -239,7 +267,7 @@ class SMSVerificationApiView(viewsets.ModelViewSet):
             return Response({'error': 'email обязателен.'}, status.HTTP_400_BAD_REQUEST)
 
         if not code:
-            return Response({'error': 'Необходимо код подтверждения.'}, status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Необходим код подтверждения.'}, status.HTTP_400_BAD_REQUEST)
 
         # Проверяем код из кэша
         if not code_valid(email, code):
@@ -274,6 +302,121 @@ class SMSVerificationApiView(viewsets.ModelViewSet):
 
         except ObjectDoesNotExist:
             return Response({'error': 'Код не найден или уже использован.'}, status.HTTP_400_BAD_REQUEST)
+
+#Документация (swagger-drd-spectecular)API->UserProfileApiView(0:18)
+@extend_schema_view(
+    list = extend_schema(
+        summary ='Получение списка Профиля пользователей',
+        description = 'Возвращает список всез Пользователей с возможностью фильтрации по ID пользователя,по email,по username',
+        parameters=[
+            OpenApiParameter(name ='id',decription ='Фильтр по ID верификации',required =False,type=int),
+            OpenApiParameter(name ='email',decription ='Фильтр по email верификации',required =False,type=str),
+            OpenApiParameter(name ='username',decription ='Фильтр по коду верификации',required =False,type=str),
+        ],
+        responses = {
+            200: UserSerializer,
+            400: OpenApiExample(
+                'Ошибка запроса',
+                {'error':'Некорректные данные'}
+            ),
+            404: OpenApiExample(
+                'Профиль польщователя не найден',
+                {'error':'Некорректные данные'}
+            ),
+        },
+    ),
+    retrive= extend_schema(
+        summary='Получение деталей Профиля пользователя',
+        description='Возвращает  данные конкретного профиля Пользователя .Результаты кэшируются для повышения производительности',
+        responses = {
+            200: UserSerializer,
+            404: OpenApiExample(
+                'Профиль польщователя не найден',
+                {'error': 'Профиль польщователя с данными ID не найден '}
+            ),
+        },
+    ),
+    update = extend_schema(
+        summary='Обновление  Профиля пользователя',
+        description='Обновляет данные профиля Пользователя  по ID.',
+        request= UserSerializer,
+        responses={
+            200: UserSerializer,
+            400: OpenApiExample(
+                'Ошибка запроса',
+                {'error': 'Некорректные данные'}
+            ),
+            404: OpenApiExample(
+                'Профиль пользователя не найден',
+                {'error': 'Профиль польщователя с данными ID не найден '}
+            ),
+        },
+    ),
+    partial_update= extend_schema(
+        summary=' Частичное Обновление  Профиля пользователя',
+        description='Частично Обновляет данные профиля Пользователя  по ID.',
+        request=UserSerializer,
+        responses={
+            200: UserSerializer,
+            400: OpenApiExample(
+                'Ошибка Валидации',
+                {'error': 'Некорректные данные'}
+            ),
+            404: OpenApiExample(
+                'Профиль пользователя не найден',
+                {'error': 'Профиль польщователя с данными ID не найден '}
+            ),
+        },
+    ),
+    destroy=extend_schema(
+        summary='Удаление Профиля пользователя',
+        description='Удаление Профиля пользователя по его ID. ',
+        responses={
+            204: OpenApiExample(
+                'Успешное Удаление',
+                {'message':'Профиль пользователя успешно удален'},
+            ),
+            404: OpenApiExample(
+                'Профиль пользователя не найден',
+                {'error': 'Профиль пользователя, которого хотите удалить с данными ID не найден '}
+            )
+        }
+    )
+)
+
+
+class UserProfileApiView(viewsets.ModelViewSet):
+    """
+    Профиль пользователя (только для аутентифийированных пользователей)
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields =['id','email','username']
+
+    def retrieve(self, request, *args, **kwargs):
+        """ Получение данных профиля"""
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+    def update(self, request, *args, **kwargs):
+        """Обновление данных профиля"""
+        serializer = UserSerializer(request.user,data=request.data,partial=False)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data,status.HTTP_200_OK)
+
+    def patch(self,request):
+        """ Частичное обновление данных"""
+        serializer =UserSerializer(request.user)
+
+
+
+
+
+
+
+
+
 
 
 
