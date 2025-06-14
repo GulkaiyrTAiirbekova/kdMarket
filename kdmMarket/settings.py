@@ -90,8 +90,9 @@ WSGI_APPLICATION = 'kdmMarket.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+#        'NAME': os.getenv('POSTGRES_DB'),
         'USER': os.getenv('POSTGRES_USER'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
         'HOST': os.getenv('POSTGRES_HOST'),
@@ -159,6 +160,11 @@ REST_FRAMEWORK = {
 
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ],
+
+
 }
 
 # smtp-YANDEX+EMAIL connection
@@ -206,8 +212,8 @@ CELERY_TASK_ALWAYS_EAGER = True  # True для локального тестир
 CELERY_TASK_EAGER_PROPAGATES = True
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Your Project API',
-    'DESCRIPTION': 'Your project description',
+    'TITLE': 'kdmMarket Project API',
+    'DESCRIPTION': 'Online marketPlace ',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 'SWAGGER_UI_DIST': 'SIDECAR',  # shorthand to use the sidecar instead
